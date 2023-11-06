@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Herb {
+  name        String   @id @db.VarChar(30)
+  photo       String?
+  traits      String[] @default([])
+  price       Int
+  displayedIn Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model I18n {
+  locale   String @id
+  messages Json
+}
