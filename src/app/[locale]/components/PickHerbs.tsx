@@ -97,7 +97,7 @@ export default function PickHerbs({ herbs, onPickChange }: PickHerbsProps) {
     });
     reader.readAsText(file);
   }, []);
-  const [isUploadFileEnabled, setIsUploadFileEnabled] = useState(false);
+  const [isUploadFileEnabled, setIsUploadFileEnabled] = useState(true);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'u') {
