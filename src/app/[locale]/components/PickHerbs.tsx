@@ -7,7 +7,7 @@ import { useCurrentLocale } from 'next-i18n-router/client';
 import { useIntl } from 'react-intl';
 import { z } from 'zod';
 
-import { i18nConfig } from '@/core/config/i18n';
+import { LOCALES, i18nConfig } from '@/core/config/i18n';
 import { HerbSchema } from '@/core/types/schemas/herb';
 import { HerbModel } from '@/core/types/models/herb';
 import { HERB_PHOTO_ALT_TEXT, BLUR_DATA_URL } from '@/core/config/constants';
@@ -40,7 +40,7 @@ interface PickHerbsProps {
 }
 
 export default function PickHerbs({ herbs, onPickChange }: PickHerbsProps) {
-  const locale = useCurrentLocale(i18nConfig) || i18nConfig.defaultLocale;
+  const locale = (useCurrentLocale(i18nConfig) || i18nConfig.defaultLocale) as LOCALES;
   const intl = useIntl();
 
   const [filteredHerbs, setFilteredHerbs] =

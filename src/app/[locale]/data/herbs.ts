@@ -22,7 +22,7 @@ export const getHerbs = async () => {
 export const updateHerbs = async (newHerbs: HerbModel[]) => {
   try {
     return Promise.all(
-      newHerbs.map(({ id, ...herb }) => {
+      newHerbs.map((herb) => {
         return prisma.herb.upsert({
           where: { name: herb.name },
           update: herb,
