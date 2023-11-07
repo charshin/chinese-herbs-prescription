@@ -2,7 +2,7 @@
   "extends": ["next/core-web-vitals", "plugin:storybook/recommended", "prettier"],
   "rules": {
     "import/order": [
-      "warn",
+      "error",
       {
         "newlines-between": "always",
         "groups": ["builtin", "external", "internal", "parent", "sibling", "index"]
