@@ -9,10 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "lint-staged": "lint-staged",
-    "prepare": "husky install",
+    "prepare": "prisma generate && husky install",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "migrate:dev": "dotenv -e .env.local -- npx prisma migrate dev --name herbs"
+    "migrate:dev": "dotenv -e .env.local -- npx prisma migrate dev"
   },
   "keywords": [
     "TMC",
@@ -31,6 +31,7 @@
     "loglevel": "1.8.1",
     "next": "14.0.1",
     "next-i18n-router": "5.0.1",
+    "prisma": "5.5.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-intl": "6.5.1",
@@ -61,7 +62,6 @@
     "postcss": "8.4.29",
     "prettier": "3.0.3",
     "prettier-plugin-tailwindcss": "0.5.4",
-    "prisma": "5.5.2",
     "storybook": "7.5.2",
     "tailwindcss": "3.3.3",
     "typescript": "5.2.2"
