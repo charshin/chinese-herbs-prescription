@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 import { HerbModel } from '@/core/types/models/herb';
 import { HERB_PHOTO_ALT_TEXT, BLUR_DATA_URL, QUANTITIES } from '@/core/config/constants';
-import HerbPhoto from '@/core/assets/img/ty-ba-diep.jpeg';
+import DefaultHerbPhoto from '@/core/assets/img/ty-ba-diep.jpeg';
 import Input from '@/core/components/Input';
 import { i18nConfig, currencies, LOCALES } from '@/core/config/i18n';
 
@@ -78,13 +78,12 @@ export default function PrescriptionItem({
     <div className="relative flex items-center gap-2 rounded-md bg-slate-100 p-5 shadow-md ring-1 ring-slate-500">
       <div className="h-16 w-16 overflow-hidden rounded-full">
         <Image
-          src={HerbPhoto}
+          src={herb.photo || DefaultHerbPhoto}
           alt={HERB_PHOTO_ALT_TEXT}
-          // width={20}
-          // height={20}
-          // blurDataURL={poster ? BLUR_DATA_URL : undefined}
-          // blurDataURL={BLUR_DATA_URL}
-          // placeholder="blur"
+          width={64}
+          height={64}
+          blurDataURL={herb.photo ? BLUR_DATA_URL : undefined}
+          placeholder="blur"
         />
       </div>
       <div className="flex w-28 flex-col">

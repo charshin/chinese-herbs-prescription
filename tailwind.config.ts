@@ -1,9 +1,9 @@
 import type { Config } from 'tailwindcss';
-
 import colors from 'tailwindcss/colors';
 
 const config: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}', './node_modules/flowbite/**/*.{js,ts}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -11,6 +11,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('@tailwindcss/forms'), require('flowbite/plugin')],
 };
 export default config;

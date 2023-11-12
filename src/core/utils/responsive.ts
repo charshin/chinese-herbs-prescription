@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useState } from 'react';
 import { useMediaQuery as useMQ } from 'react-responsive';
 

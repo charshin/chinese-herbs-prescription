@@ -106,7 +106,7 @@ export default forwardRef<HTMLInputElement, InputProps>(function Input(
           {label}
         </label>
       )}
-      <div className="relative shadow-sm">
+      <div className="relative rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-brand-600">
         {leadingAddOn && (
           <div
             ref={leadingAddOnEl}
@@ -120,7 +120,7 @@ export default forwardRef<HTMLInputElement, InputProps>(function Input(
           type={type}
           name={id}
           id={id}
-          className="focus:ring-brand-600 block h-full w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-slate-500 placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+          className="block h-full w-full border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
           style={{
             paddingLeft: leadingAddOn && leadingAddOnPadding,
             paddingRight: trailingAddOn && trailingAddOnPadding,

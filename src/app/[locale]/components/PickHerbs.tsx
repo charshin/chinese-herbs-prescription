@@ -12,7 +12,7 @@ import { HerbSchema } from '@/core/types/schemas/herb';
 import { HerbModel } from '@/core/types/models/herb';
 import { HERB_PHOTO_ALT_TEXT, BLUR_DATA_URL } from '@/core/config/constants';
 import { convertHerbDTOtoModel } from '@/core/utils/data';
-import HerbPhoto from '@/core/assets/img/ty-ba-diep.jpeg';
+import DefaultHerbPhoto from '@/core/assets/img/ty-ba-diep.jpeg';
 
 import { uploadHerbsData } from '../actions/uploadHerbsData';
 
@@ -97,10 +97,10 @@ export default function PickHerbs({ herbs, onPickChange }: PickHerbsProps) {
     });
     reader.readAsText(file);
   }, []);
-  const [isUploadFileEnabled, setIsUploadFileEnabled] = useState(true);
+  const [isUploadFileEnabled, setIsUploadFileEnabled] = useState(false);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'u') {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toUpperCase() === 'U') {
         setIsUploadFileEnabled(!isUploadFileEnabled);
       }
     };
@@ -159,13 +159,12 @@ export default function PickHerbs({ herbs, onPickChange }: PickHerbsProps) {
               >
                 <div className="h-5 w-5 overflow-hidden rounded-full">
                   <Image
-                    src={HerbPhoto}
+                    src={herb.photo || DefaultHerbPhoto}
                     alt={HERB_PHOTO_ALT_TEXT}
-                    // width={20}
-                    // height={20}
-                    // blurDataURL={poster ? BLUR_DATA_URL : undefined}
-                    // blurDataURL={BLUR_DATA_URL}
-                    // placeholder="blur"
+                    width={20}
+                    height={20}
+                    blurDataURL={herb.photo ? BLUR_DATA_URL : undefined}
+                    placeholder="blur"
                   />
                 </div>
                 <span className="py-1 font-light">{herb.displayedIn[locale]}</span>
