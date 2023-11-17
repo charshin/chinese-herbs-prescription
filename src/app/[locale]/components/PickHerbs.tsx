@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useCurrentLocale } from 'next-i18n-router/client';
 import { useIntl } from 'react-intl';
 import { z } from 'zod';
+import Fuse from 'fuse.js';
 
 import { LOCALES, i18nConfig } from '@/core/config/i18n';
 import { HerbSchema } from '@/core/types/schemas/herb';
@@ -48,12 +49,17 @@ export default function PickHerbs({ herbs, onPickChange }: PickHerbsProps) {
   const keywordRef = useRef('');
   const filter = useCallback(
     (herbs: HerbModel[], keyword?: string) => {
-      const regex = new RegExp((keywordRef.current = keyword ?? keywordRef.current), 'i');
-      const newFilteredHerbs = herbs.map((herb) => ({
-        ...herb,
-        filtered: !regex.test(herb.displayedIn[locale]),
-      }));
-      setFilteredHerbs(newFilteredHerbs);
+      keywordRef.current = keyword ?? keywordRef.current;
+
+      if (!keywordRef.current) {
+        return setFilteredHerbs(herbs);
+      }
+
+      const fuse = new Fuse(herbs, {
+        keys: ['name', 'traits', 'displayedIn.en', `displayedIn.${locale}`],
+      });
+      const result = fuse.search(keywordRef.current);
+      setFilteredHerbs(result.map(({ item }) => item));
     },
     [locale],
   );

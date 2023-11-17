@@ -1,17 +1,98 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { memo, useState, useCallback, useEffect, useRef } from 'react';
+import type { default as FlowbiteDatePicker, Options } from 'flowbite-datepicker/Datepicker';
+import format from 'date-fns/format';
+import parse from 'date-fns/parse';
+import type { Locale } from 'date-fns';
 
-export default function DatePicker() {
-  const initDatepickers = useCallback(async () => {
-    const getDatepickerOptions = (datepickerEl: Element) => {
-      const buttons = datepickerEl.hasAttribute('datepicker-buttons');
-      const autohide = datepickerEl.hasAttribute('datepicker-autohide');
-      const format = datepickerEl.hasAttribute('datepicker-format');
-      const orientation = datepickerEl.hasAttribute('datepicker-orientation');
-      const title = datepickerEl.hasAttribute('datepicker-title');
+import Input from '@/core/components/Input';
 
-      const options = {};
+declare global {
+  interface HTMLElementEventMap {
+    changeDate: CustomEvent<{ date: Date }>;
+  }
+}
+
+interface DatePickerProps {
+  /**
+   * Label of the control
+   */
+  label?: string;
+  /**
+   * Format of date
+   */
+  pattern: {
+    format: {
+      input: string;
+      output: string;
+    };
+    locale?: Locale;
+  };
+  /**
+   * Rendered in form or standalone
+   */
+  standalone?: boolean;
+  /**
+   * Placeholder text
+   */
+  placeholder?: string;
+  /**
+   * Value of the date picker
+   */
+  value: string;
+  /**
+   * Fired on focus
+   */
+  onFocus?: () => void;
+  /**
+   * Fired on value changed
+   */
+  onChange?: (value: string) => void;
+  /**
+   * Fired on blur
+   */
+  onBlur?: () => void;
+  /**
+   * Disabled
+   */
+  disabled?: boolean;
+  /**
+   * Touched
+   */
+  touched?: boolean;
+  /**
+   * Error
+   */
+  error?: string;
+}
+
+function DatePicker({
+  label,
+  pattern,
+  standalone,
+  placeholder,
+  value,
+  onFocus,
+  onChange,
+  onBlur,
+  disabled,
+  touched,
+  error,
+}: DatePickerProps) {
+  // Init - Update (CSR & SSR)
+  const flowbiteDatePickerEl = useRef<HTMLInputElement>(null);
+  const flowbiteDatePicker = useRef<FlowbiteDatePicker | null>(null);
+  const flowbiteDatePickerIsUpdatingRef = useRef(false);
+  useEffect(() => {
+    function getOptions(el: Element) {
+      const buttons = el.hasAttribute('datepicker-buttons');
+      const autohide = el.hasAttribute('datepicker-autohide');
+      const format = el.hasAttribute('datepicker-format');
+      const orientation = el.hasAttribute('datepicker-orientation');
+      const title = el.hasAttribute('datepicker-title');
+
+      const options: Options = {};
       if (buttons) {
         options.todayBtn = true;
         options.clearBtn = true;
@@ -20,56 +101,151 @@ export default function DatePicker() {
         options.autohide = true;
       }
       if (format) {
-        options.format = datepickerEl.getAttribute('datepicker-format');
+        options.format = el.getAttribute('datepicker-format') ?? undefined;
       }
       if (orientation) {
-        options.orientation = datepickerEl.getAttribute('datepicker-orientation');
+        options.orientation = el.getAttribute('datepicker-orientation') ?? undefined;
       }
       if (title) {
-        options.title = datepickerEl.getAttribute('datepicker-title');
+        options.title = el.getAttribute('datepicker-title') ?? undefined;
       }
 
       return options;
+    }
+    function discardClick(e: MouseEvent) {
+      e.stopPropagation();
+    }
+    (async () => {
+      if (flowbiteDatePickerEl.current === null) return;
+      const FlowbiteDatePicker = (await import('flowbite-datepicker/Datepicker')).default;
+      flowbiteDatePicker.current = new FlowbiteDatePicker(
+        flowbiteDatePickerEl.current,
+        getOptions(flowbiteDatePickerEl.current),
+      );
+      flowbiteDatePicker.current?.pickerElement.addEventListener('click', discardClick);
+    })();
+
+    return () => {
+      flowbiteDatePicker.current?.pickerElement.removeEventListener('click', discardClick);
     };
-
-    const datepickers = document.querySelectorAll('[type=datepicker]');
-    const inlineDatepickers = document.querySelectorAll('[type=inline-datepicker]');
-    if (datepickers.length > 0 || inlineDatepickers.length > 0) {
-      const Datepicker = (await import('flowbite-datepicker/Datepicker')).default;
-      datepickers.forEach((el) => new Datepicker(el, getDatepickerOptions(el)));
-      inlineDatepickers.forEach((el) => new Datepicker(el, getDatepickerOptions(el)));
-    }
-
-    const dateRangePickers = document.querySelectorAll('[type=date-rangepicker]');
-    if (dateRangePickers.length > 0) {
-      const DateRangePicker = (await import('flowbite-datepicker/DateRangePicker')).default;
-      dateRangePickers.forEach((el) => new DateRangePicker(el, getDatepickerOptions(el)));
-    }
   }, []);
-
   useEffect(() => {
-    initDatepickers();
-  }, [initDatepickers]);
+    if (value !== '' && flowbiteDatePickerEl.current) {
+      const date = parse(value, pattern.format.output, new Date(), { locale: pattern.locale });
+      const dateString = format(date, 'dd/MM/yyyy');
+      flowbiteDatePickerEl.current.value = dateString;
+      flowbiteDatePickerIsUpdatingRef.current = true;
+      flowbiteDatePicker.current?.update();
+      flowbiteDatePickerIsUpdatingRef.current = false;
+    }
+  }, [value, pattern.format.input, pattern.format.output, pattern.locale]);
+
+  const inputWrapperEl = useRef<HTMLDivElement>(null);
+
+  const [inputValue, setInputValue] = useState(value);
+  useEffect(() => {
+    if (value !== '') {
+      setInputValue(value);
+    }
+  }, [value]);
+
+  // Enter
+  const showPicker = useCallback(() => {
+    flowbiteDatePicker.current?.show();
+  }, []);
+  const handleFocus = useCallback(() => {
+    showPicker();
+    onFocus?.();
+  }, [onFocus, showPicker]);
+
+  // Edit
+  useEffect(() => {
+    const el = flowbiteDatePickerEl.current;
+    function handleChange(e: CustomEvent<{ date: Date }>) {
+      if (flowbiteDatePickerIsUpdatingRef.current) return;
+      onChange?.(format(e.detail.date, pattern.format.input));
+    }
+    el?.addEventListener('changeDate', handleChange);
+
+    return () => {
+      el?.removeEventListener('changeDate', handleChange);
+    };
+  }, [onChange, pattern.format.input]);
+
+  // Exit
+  const exit = useCallback(() => {
+    setInputValue(value);
+    flowbiteDatePicker.current?.hide();
+  }, [value]);
+  useEffect(() => {
+    const el = inputWrapperEl.current;
+
+    function discardClick(e: MouseEvent) {
+      e.stopPropagation();
+    }
+    el?.addEventListener('click', discardClick);
+    document.addEventListener('click', exit);
+
+    function tabAway(e: KeyboardEvent) {
+      if (e.key === 'Tab') {
+        exit();
+      }
+    }
+    el?.addEventListener('keydown', tabAway);
+
+    return () => {
+      el?.removeEventListener('click', discardClick);
+      document.removeEventListener('click', exit);
+
+      el?.removeEventListener('keydown', tabAway);
+    };
+  }, [exit]);
 
   return (
-    <div className="relative max-w-sm">
-      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-        <svg
-          className="h-4 w-4 text-gray-500 dark:text-gray-400"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
-        </svg>
+    <div className="relative">
+      <div className="invisible absolute inset-x-0 top-[28px] h-10">
+        <input
+          ref={flowbiteDatePickerEl}
+          datepicker-format="dd/mm/yyyy"
+          datepicker-orientation="bottom"
+          className="block h-full w-full"
+        />
       </div>
-      <input
-        type="datepicker"
-        datepicker-format="dd/mm/yyyy"
-        className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-        placeholder="Select date"
-      />
+      <div ref={inputWrapperEl}>
+        <Input
+          label={label}
+          standalone={standalone}
+          leadingAddOn={
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path d="M12.75 12.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM7.5 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM8.25 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM9.75 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM10.5 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM12.75 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM14.25 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM15 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM16.5 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM15 12.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM16.5 13.5a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+              <path
+                fillRule="evenodd"
+                d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z"
+                clipRule="evenodd"
+              />
+            </svg>
+          }
+          placeholder={placeholder || pattern.format.input}
+          value={inputValue}
+          onFocus={handleFocus}
+          onChange={setInputValue}
+          onBlur={onBlur}
+          onEnter={onChange}
+          onEscape={exit}
+          blurOnEspace
+          disabled={disabled}
+          touched={touched}
+          error={error}
+        />
+      </div>
     </div>
   );
 }
+
+export default memo(DatePicker);

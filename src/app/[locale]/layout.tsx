@@ -18,9 +18,11 @@ export default async function Layout({
   return (
     <IntlProvider locale={I18n.locale} messages={messages}>
       <div className="relative min-h-screen pb-14">
-        <Header />
+        <div className="sticky top-0 z-40">
+          <Header />
+        </div>
         <main>{children}</main>
-        <div className="absolute bottom-0 flex h-14 w-full items-center justify-center">
+        <div className="absolute inset-x-0 bottom-0 h-14">
           <Footer />
         </div>
       </div>

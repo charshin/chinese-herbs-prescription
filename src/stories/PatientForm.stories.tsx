@@ -6,10 +6,16 @@ const meta = {
   title: 'PatientForm',
   component: PatientForm,
   parameters: {
-    layout: 'centered',
+    layout: 'fullscreen',
   },
-  tags: ['autodocs'],
   argTypes: {},
+  decorators: [
+    (Story) => (
+      <div className="flex min-h-screen w-screen items-center justify-center p-5 antialiased dark:bg-gray-900">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof PatientForm>;
 
 export default meta;
