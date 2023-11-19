@@ -58,6 +58,10 @@ interface DatePickerProps {
    */
   disabled?: boolean;
   /**
+   * Visited
+   */
+  visited?: boolean;
+  /**
    * Touched
    */
   touched?: boolean;
@@ -77,6 +81,7 @@ function DatePicker({
   onChange,
   onBlur,
   disabled,
+  visited,
   touched,
   error,
 }: DatePickerProps) {
@@ -130,13 +135,15 @@ function DatePicker({
     };
   }, []);
   useEffect(() => {
-    if (value !== '' && flowbiteDatePickerEl.current) {
-      const date = parse(value, pattern.format.output, new Date(), { locale: pattern.locale });
-      const dateString = format(date, 'dd/MM/yyyy');
-      flowbiteDatePickerEl.current.value = dateString;
-      flowbiteDatePickerIsUpdatingRef.current = true;
-      flowbiteDatePicker.current?.update();
-      flowbiteDatePickerIsUpdatingRef.current = false;
+    if (flowbiteDatePickerEl.current) {
+      try {
+        const date = parse(value, pattern.format.output, new Date(), { locale: pattern.locale });
+        const dateString = format(date, 'dd/MM/yyyy');
+        flowbiteDatePickerEl.current.value = dateString;
+        flowbiteDatePickerIsUpdatingRef.current = true;
+        flowbiteDatePicker.current?.update();
+        flowbiteDatePickerIsUpdatingRef.current = false;
+      } catch {}
     }
   }, [value, pattern.format.input, pattern.format.output, pattern.locale]);
 
@@ -144,9 +151,7 @@ function DatePicker({
 
   const [inputValue, setInputValue] = useState(value);
   useEffect(() => {
-    if (value !== '') {
-      setInputValue(value);
-    }
+    setInputValue(value);
   }, [value]);
 
   // Enter
@@ -174,9 +179,10 @@ function DatePicker({
 
   // Exit
   const exit = useCallback(() => {
-    setInputValue(value);
     flowbiteDatePicker.current?.hide();
-  }, [value]);
+    setInputValue(value);
+    if (visited) onBlur?.(); // Guard against outside click w/o focusing first
+  }, [value, visited, onBlur]);
   useEffect(() => {
     const el = inputWrapperEl.current;
 
@@ -235,7 +241,6 @@ function DatePicker({
           value={inputValue}
           onFocus={handleFocus}
           onChange={setInputValue}
-          onBlur={onBlur}
           onEnter={onChange}
           onEscape={exit}
           blurOnEspace

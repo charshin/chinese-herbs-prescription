@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 
-interface RadioGroupValue {
+export interface RadioGroupValue {
   options: { value: string; label: string }[];
   selected?: string;
 }
@@ -64,19 +64,17 @@ function RadioGroup({
 }: RadioGroupProps) {
   const id = label?.split(' ').join('-');
 
-  console.log('%cvalue', 'font-size: 12px; color: #00b3b3', value);
-
   return (
     <div className="w-full">
       <label
         htmlFor={id}
-        className={`mb-2 block font-medium leading-6 sm:text-sm${
+        className={`mb-2 block whitespace-pre font-medium leading-6 sm:text-sm${
           label ? '' : standalone ? ' hidden' : ' invisible'
         }${!disabled && !(touched && error) ? ' text-gray-900 dark:text-white' : ''}${
           disabled ? ' text-slate-500 dark:text-gray-500' : ''
         }${touched && error ? ' text-red-600 dark:text-red-500' : ''}`}
       >
-        {label || 'Label'}
+        {label || ' '}
       </label>
       <ul
         className={`w-full rounded-md border-0 font-medium text-gray-900 shadow-sm ring-1 ring-inset dark:text-white sm:flex sm:items-center sm:text-sm${
@@ -187,11 +185,11 @@ function RadioGroup({
         </li> */}
       </ul>
       <p
-        className={`mt-2 text-red-600 opacity-0 transition-opacity dark:text-red-500 sm:text-sm${
+        className={`mt-2 whitespace-pre text-red-600 opacity-0 transition-opacity dark:text-red-500 sm:text-sm${
           touched && error ? ' opacity-100' : standalone ? ' hidden' : ''
         }`}
       >
-        {error}
+        {error || ' '}
       </p>
     </div>
   );
