@@ -4,8 +4,6 @@ import { useCallback, useMemo } from 'react';
 // import { useCurrentLocale } from 'next-i18n-router/client';
 // import { useIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
-import format from 'date-fns/format';
-import parse from 'date-fns/parse';
 import isValid from 'date-fns/isValid';
 
 // import { LOCALES, i18nConfig } from '@/core/config/i18n';
@@ -13,19 +11,25 @@ import Input from '@/core/components/Input';
 import DatePicker from '@/core/components/DatePicker';
 import RadioGroup, { type RadioGroupValue } from '@/core/components/RadioGroup';
 import TextArea from '@/core/components/TextArea';
+import { submitPatient } from '@/core/actions/patient';
 
 interface PatientFormProps {}
 
 interface FormValues {
-  fullname?: string;
-  dob?: Date;
-  height?: number;
-  weight?: number;
-  bloodPresure?: {
+  fullname: string;
+  dob: Date;
+  email: string;
+  phone: string;
+  gender: { selected: 'male' | 'female' };
+  occupation?: string | null;
+  height: number;
+  weight: number;
+  bloodPressure: {
     systolic: number;
-    diastolic?: number;
+    diastolic: number;
   };
-  heartRate?: number;
+  heartRate: number;
+  address: string;
 }
 
 export default function PatientForm({}: PatientFormProps) {
@@ -34,12 +38,26 @@ export default function PatientForm({}: PatientFormProps) {
 
   const initialValues = useMemo(
     () => ({
+      fullname: 'Charlie Chau',
+      // dob: new Date('dada'),
+      email: 'c@g.co',
+      phone: '81234567',
       gender: {
         options: [
           { value: 'male', label: 'Male' },
           { value: 'female', label: 'Female' },
         ],
+        selected: 'male',
       },
+      occupation: 'dev',
+      height: 170,
+      weight: 70,
+      bloodPressure: {
+        systolic: 110,
+        diastolic: 70,
+      },
+      heartRate: 65,
+      address: 'ADD ABE',
     }),
     [],
   );
@@ -47,7 +65,7 @@ export default function PatientForm({}: PatientFormProps) {
     pristine: true,
     touched: true,
     errors: true,
-    // values: true,
+    submitting: true,
   };
   const pattern = useMemo(
     () => ({
@@ -59,13 +77,21 @@ export default function PatientForm({}: PatientFormProps) {
     }),
     [],
   );
-  const submit = useCallback((values: FormValues) => {
-    console.log('%csubmit values', 'font-size: 12px; color: #00b3b3', values);
+  const submit = useCallback(async (values: FormValues) => {
+    try {
+      console.log('%csubmit values', 'font-size: 12px; color: #00b3b3', values);
+      const res = await submitPatient({ ...values, gender: values.gender.selected });
+      // TODO notify success or error
+      // console.log('%cSuccessfully created new patient', 'font-size: 12px; color: #00b3b3', res);
+    } catch (error) {
+      // Integrate with final-form submission error?
+      console.log('%csubmit error', 'font-size: 12px; color: #00b3b3', error);
+    }
   }, []);
 
   return (
     <Form initialValues={initialValues} subscription={subscription} onSubmit={submit}>
-      {({ handleSubmit, form, pristine, touched, errors }) => {
+      {({ handleSubmit, form, pristine, touched, errors, submitting }) => {
         // const hasVisibleErrors = Object.entries(touched || {})
         //   .map(([k, v]) => v && !!errors?.[k])
         //   .some(Boolean);
@@ -94,7 +120,7 @@ export default function PatientForm({}: PatientFormProps) {
                   }
                 >
                   {({ input, meta }) => {
-                    console.log('%cfullname', 'font-size: 12px; color: yellow');
+                    // console.log('%cfullname', 'font-size: 12px; color: yellow');
                     return (
                       <Input
                         label="Full Name *"
@@ -110,41 +136,10 @@ export default function PatientForm({}: PatientFormProps) {
               <div className="col-span-full sm:col-span-2">
                 <Field
                   name="dob"
-                  format={(value) => {
-                    if (value === undefined) return '';
-                    try {
-                      console.log(
-                        '%cformat',
-                        'font-size: 12px; color: #00b3b3',
-                        value,
-                        format(value, pattern.format.output, { locale: pattern.locale }),
-                      );
-                      return format(value, pattern.format.output, { locale: pattern.locale });
-                    } catch {
-                      return value.toString();
-                    }
-                  }}
-                  parse={(value: string) => {
-                    console.log(
-                      '%cparse',
-                      'font-size: 12px; color: #00b3b3',
-                      value,
-                      parse(value, pattern.format.input, new Date(), {
-                        locale: pattern.locale,
-                      }),
-                    );
-                    if (value === '') return undefined;
-                    return parse(value, pattern.format.input, new Date(), {
-                      locale: pattern.locale,
-                    });
-                  }}
+                  format={(value) => value ?? null}
+                  parse={(value: Date | null) => value ?? undefined}
                   validate={(value) => {
-                    console.log(
-                      '%cvalidate',
-                      'font-size: 12px; color: #00b3b3',
-                      value,
-                      isValid(value),
-                    );
+                    // console.log('%cvalidate', 'font-size: 12px; color: #00b3b3', value);
                     if (value === undefined) return "Please enter patient's date of birth";
                     return isValid(value) ? '' : 'Please enter a valid date';
                   }}
@@ -313,7 +308,7 @@ export default function PatientForm({}: PatientFormProps) {
                 <Field
                   name="bloodPressure"
                   format={(value) => {
-                    console.log('%cformat', 'font-size: 12px; color: #00b3b3', value);
+                    // console.log('%cformat', 'font-size: 12px; color: #00b3b3', value);
 
                     if (value === undefined) {
                       return '';
@@ -343,13 +338,13 @@ export default function PatientForm({}: PatientFormProps) {
                           : null
                         : undefined;
 
-                    console.log(
-                      '%cparse',
-                      'font-size: 12px; color: #00b3b3',
-                      value,
-                      systolic,
-                      diastolic,
-                    );
+                    // console.log(
+                    //   '%cparse',
+                    //   'font-size: 12px; color: #00b3b3',
+                    //   value,
+                    //   systolic,
+                    //   diastolic,
+                    // );
                     return {
                       systolic,
                       diastolic,
@@ -407,23 +402,46 @@ export default function PatientForm({}: PatientFormProps) {
               <div className="col-span-full sm:col-span-1">
                 <button
                   type="button"
-                  className="mb-2 me-2 w-full rounded-md bg-gradient-to-r from-brand-500 to-blue-500 px-5 py-2.5 text-center font-medium text-white hover:bg-gradient-to-bl focus:outline-none focus:ring-4 focus:ring-brand-300 disabled:cursor-not-allowed disabled:from-slate-500 disabled:to-gray-500 dark:focus:ring-brand-800 sm:text-sm"
+                  className="mb-2 me-2 inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-brand-500 to-blue-500 px-5 py-2.5 text-center font-medium text-white hover:bg-gradient-to-bl focus:outline-none focus:ring-4 focus:ring-brand-300 disabled:cursor-not-allowed disabled:from-slate-500 disabled:to-gray-500 dark:focus:ring-brand-800 sm:text-sm"
                   onClick={handleSubmit}
                   disabled={
                     pristine ||
                     Object.entries(touched || {})
                       .map(([k, v]) => v && !!errors?.[k])
-                      .some(Boolean)
+                      .some(Boolean) ||
+                    submitting
                   }
                 >
-                  Submit
+                  {submitting && (
+                    <svg
+                      className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  )}
+                  {submitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
               <div className="col-span-full sm:col-span-1">
                 <button
                   type="button"
                   className="mb-2 me-2 w-full rounded-md bg-gradient-to-br from-pink-500 to-orange-400 px-5 py-2.5 text-center font-medium text-white hover:bg-gradient-to-bl focus:outline-none focus:ring-4 focus:ring-pink-200 disabled:cursor-not-allowed disabled:from-slate-500 disabled:to-gray-500 dark:focus:ring-pink-800 sm:text-sm"
-                  disabled={pristine}
+                  disabled={pristine || submitting}
                   onClick={() => form.restart()}
                 >
                   Reset

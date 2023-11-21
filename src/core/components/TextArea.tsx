@@ -82,6 +82,7 @@ function TextArea({
         rows={2}
         className="block h-full w-full rounded-md border-0 bg-gray-50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 invalid:bg-red-50 invalid:text-red-900 invalid:placeholder-red-400 invalid:ring-red-500 focus:ring-2 focus:ring-inset focus:ring-brand-600 focus:invalid:ring-red-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:ring-gray-600 dark:invalid:text-red-500 dark:invalid:placeholder-red-400 dark:invalid:ring-red-500 dark:focus:ring-brand-500 dark:focus:invalid:ring-red-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400 dark:disabled:ring-gray-500 sm:text-sm sm:leading-6"
         placeholder={placeholder}
+        value={value}
         onFocus={onFocus}
         onChange={(e) => onChange?.(e.target.value)}
         onBlur={onBlur}

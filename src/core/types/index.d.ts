@@ -1,3 +1,7 @@
+interface Identifiable {
+  id: number;
+}
+
 declare module 'flowbite-datepicker/Datepicker' {
   export default class Datepicker {
     constructor(element: HTMLInputElement, options: Datepicker.Options);

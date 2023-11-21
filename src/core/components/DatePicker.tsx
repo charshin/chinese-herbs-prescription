@@ -4,6 +4,8 @@ import { memo, useState, useCallback, useEffect, useRef } from 'react';
 import type { default as FlowbiteDatePicker, Options } from 'flowbite-datepicker/Datepicker';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
+import addMinutes from 'date-fns/addMinutes';
+import isValid from 'date-fns/isValid';
 import type { Locale } from 'date-fns';
 
 import Input from '@/core/components/Input';
@@ -40,7 +42,7 @@ interface DatePickerProps {
   /**
    * Value of the date picker
    */
-  value: string;
+  value: Date | null;
   /**
    * Fired on focus
    */
@@ -48,7 +50,7 @@ interface DatePickerProps {
   /**
    * Fired on value changed
    */
-  onChange?: (value: string) => void;
+  onChange?: (value: Date | null) => void;
   /**
    * Fired on blur
    */
@@ -135,24 +137,37 @@ function DatePicker({
     };
   }, []);
   useEffect(() => {
-    if (flowbiteDatePickerEl.current) {
+    if (flowbiteDatePickerEl.current && value) {
       try {
-        const date = parse(value, pattern.format.output, new Date(), { locale: pattern.locale });
-        const dateString = format(date, 'dd/MM/yyyy');
+        const dateString = format(value, 'dd/MM/yyyy');
         flowbiteDatePickerEl.current.value = dateString;
         flowbiteDatePickerIsUpdatingRef.current = true;
         flowbiteDatePicker.current?.update();
         flowbiteDatePickerIsUpdatingRef.current = false;
       } catch {}
     }
-  }, [value, pattern.format.input, pattern.format.output, pattern.locale]);
+  }, [value]);
 
   const inputWrapperEl = useRef<HTMLDivElement>(null);
 
-  const [inputValue, setInputValue] = useState(value);
+  const formatValue = useCallback(() => {
+    if (value === null) return '';
+    if (!isValid(value)) return value.toString();
+    return format(value, pattern.format.output, { locale: pattern.locale });
+  }, [value, pattern.format.output, pattern.locale]);
+  const [inputValue, setInputValue] = useState(formatValue);
   useEffect(() => {
-    setInputValue(value);
-  }, [value]);
+    setInputValue(formatValue());
+  }, [formatValue]);
+  const parseInputValue = useCallback(() => {
+    if (inputValue === '') return null;
+    return parse(`${inputValue}Z`, `${pattern.format.input}X`, new Date(), {
+      locale: pattern.locale,
+    });
+  }, [inputValue, pattern.format.input, pattern.locale]);
+  const commitInputValue = useCallback(() => {
+    onChange?.(parseInputValue());
+  }, [onChange, parseInputValue]);
 
   // Enter
   const showPicker = useCallback(() => {
@@ -168,7 +183,7 @@ function DatePicker({
     const el = flowbiteDatePickerEl.current;
     function handleChange(e: CustomEvent<{ date: Date }>) {
       if (flowbiteDatePickerIsUpdatingRef.current) return;
-      onChange?.(format(e.detail.date, pattern.format.input));
+      onChange?.(addMinutes(e.detail.date, -new Date().getTimezoneOffset()));
     }
     el?.addEventListener('changeDate', handleChange);
 
@@ -180,9 +195,9 @@ function DatePicker({
   // Exit
   const exit = useCallback(() => {
     flowbiteDatePicker.current?.hide();
-    setInputValue(value);
+    setInputValue(formatValue());
     if (visited) onBlur?.(); // Guard against outside click w/o focusing first
-  }, [value, visited, onBlur]);
+  }, [formatValue, visited, onBlur]);
   useEffect(() => {
     const el = inputWrapperEl.current;
 
@@ -241,7 +256,7 @@ function DatePicker({
           value={inputValue}
           onFocus={handleFocus}
           onChange={setInputValue}
-          onEnter={onChange}
+          onEnter={commitInputValue}
           onEscape={exit}
           blurOnEspace
           disabled={disabled}
