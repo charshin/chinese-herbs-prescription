@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
 import CustomHtml from '@/core/components/CustomHtml';
+import AlertSystem from '@/core/components/Alert';
 import InitFlowbite from '@/core/lib/flowbite';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -16,7 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <CustomHtml>
       <body className={`${inter.className} antialiased dark:bg-gray-900`}>
-        <InitFlowbite>{children}</InitFlowbite>
+        <InitFlowbite>
+          <AlertSystem>{children}</AlertSystem>
+        </InitFlowbite>
       </body>
     </CustomHtml>
   );

@@ -12,6 +12,8 @@ import DatePicker from '@/core/components/DatePicker';
 import RadioGroup, { type RadioGroupValue } from '@/core/components/RadioGroup';
 import TextArea from '@/core/components/TextArea';
 import { submitPatient } from '@/core/actions/patient';
+import { useAlert } from '@/core/components/Alert';
+import { getErrorMessage } from '@/core/utils/error';
 
 interface PatientFormProps {}
 
@@ -35,6 +37,8 @@ interface FormValues {
 export default function PatientForm({}: PatientFormProps) {
   // const locale = (useCurrentLocale(i18nConfig) || i18nConfig.defaultLocale) as LOCALES;
   // const intl = useIntl();
+
+  const { notify } = useAlert();
 
   const initialValues = useMemo(
     () => ({
@@ -77,17 +81,17 @@ export default function PatientForm({}: PatientFormProps) {
     }),
     [],
   );
-  const submit = useCallback(async (values: FormValues) => {
-    try {
-      console.log('%csubmit values', 'font-size: 12px; color: #00b3b3', values);
-      const res = await submitPatient({ ...values, gender: values.gender.selected });
-      // TODO notify success or error
-      // console.log('%cSuccessfully created new patient', 'font-size: 12px; color: #00b3b3', res);
-    } catch (error) {
-      // Integrate with final-form submission error?
-      console.log('%csubmit error', 'font-size: 12px; color: #00b3b3', error);
-    }
-  }, []);
+  const submit = useCallback(
+    async (values: FormValues) => {
+      try {
+        await submitPatient({ ...values, gender: values.gender.selected });
+        notify({ type: 'success', content: 'Patient successfully created' });
+      } catch (error) {
+        notify({ type: 'error', content: getErrorMessage(error) });
+      }
+    },
+    [notify],
+  );
 
   return (
     <Form initialValues={initialValues} subscription={subscription} onSubmit={submit}>

@@ -1,5 +1,5 @@
 interface Identifiable {
-  id: number;
+  id: number | string;
 }
 
 declare module 'flowbite-datepicker/Datepicker' {
